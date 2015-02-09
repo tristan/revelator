@@ -1,0 +1,4 @@
+*.pyc
+*.spotify
+cache/
+env/
