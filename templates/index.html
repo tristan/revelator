@@ -77,12 +77,12 @@
       $(function () {
           $('#startdate').datetimepicker({
               format: "YYYY-MM-DD HH:mm",
-              defaultDate: {% if start %}{{ start }}{% else %}moment().utc().subtract(1, "days").hour(7).minute(0).second(0){% end %},
+              defaultDate: {% if start %}"{{ start }}"{% else %}moment().utc().subtract(1, "days").hour(7).minute(0).second(0){% end %},
               useCurrent: true,
           });
           $('#enddate').datetimepicker({
               format: "YYYY-MM-DD HH:mm",
-              defaultDate: {% if end %}{{ end }}{% else %}moment().utc().subtract(1, "days").hour(10).minute(0).second(0){% end %},
+              defaultDate: {% if end %}"{{ end }}"{% else %}moment().utc().subtract(1, "days").hour(10).minute(0).second(0){% end %},
               useCurrent: true,
           });
           $("#startdate").on("dp.change",function (e) {
