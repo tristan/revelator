@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>Revelator - ABC Radio spotify playlist generator</title>
+    <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap.min.css">
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+    <script src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.2/js/bootstrap.min.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/moment.js/2.9.0/moment-with-locales.min.js"></script>
+    <link rel="stylesheet" href="static/bootstrap-datetimepicker.min.css">
+    <script src="static/bootstrap-datetimepicker.min.js"></script>
+    </head>
+  <body>
+    <div class="container">
+      <div class="page-header">
+        Revelator
+      </div>
+      <form method="POST">
+        <div class='col-md-5'>
+          <div class="form-group">
+            <label for="station">Station</label>
+            <select class="form-control" name="station">
+              <option value="triplej">triplej</option>
+              <option value="doublej">doublej</option>
+            </select>
+          </div>
+        </div>
+        <div class='col-md-5'>
+          <div class="form-group">
+            <div class='input-group date' id='startdate'>
+              <input type='text' class="form-control" name="startdate"/>
+              <span class="input-group-addon"><span class="glyphicon glyphicon-calendar"></span>
+              </span>
+            </div>
+          </div>
+        </div>
+        <div class='col-md-5'>
+          <div class="form-group">
+            <div class='input-group date' id='enddate'>
+              <input type='text' class="form-control" name="enddate"/>
+              <span class="input-group-addon"><span class="glyphicon glyphicon-calendar"></span>
+              </span>
+            </div>
+          </div>
+        </div>
+        <button type="submit" class="btn btn-default">Submit</button>
+      </form>
+      {% if playlist is not None %}
+      <script type="text/javascript">
+        function copyText() {
+            var text = "{{ '\\n'.join([item[2] for item in playlist if len(item) == 3]) }}";
+            window.prompt("Copy to clipboard: Ctrl+C, Enter", text);
+        }
+      </script>
+      <table class="table table-striped">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Artists</th>
+            <th>Track</th>
+            <th>Spotify:URI <button onclick="copyText()">copy all</button></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for i, (artist, track, href) in enumerate(playlist) %}
+          <tr>
+            <th scope="row">{{ i }}</th>
+            <td>{{ ', '.join(artist) }}</td>
+            <td>{{ track }}</td>
+            <td>{{ href }}</td>
+          </tr>
+          {% end %}
+        </tbody>
+      </table>
+      {% end %}
+    </div>
+    <script type="text/javascript">
+      $(function () {
+          $('#startdate').datetimepicker({
+              format: "YYYY-MM-DD HH:mm",
+              defaultDate: {% if start %}{{ start }}{% else %}moment().utc().subtract(1, "days").hour(7).minute(0).second(0){% end %},
+              useCurrent: true,
+          });
+          $('#enddate').datetimepicker({
+              format: "YYYY-MM-DD HH:mm",
+              defaultDate: {% if end %}{{ end }}{% else %}moment().utc().subtract(1, "days").hour(10).minute(0).second(0){% end %},
+              useCurrent: true,
+          });
+          $("#startdate").on("dp.change",function (e) {
+              $('#enddate').data("DateTimePicker").minDate(e.date);
+          });
+          $("#enddate").on("dp.change",function (e) {
+              $('#startdate').data("DateTimePicker").maxDate(e.date);
+          });
+      });
+    </script>
+  </body>
+</html>

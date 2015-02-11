@@ -1,6 +1,10 @@
 import requests
 import re
-from secret_keys import CLIENT_ID, CLIENT_SECRET
+try:
+    from secret_keys import CLIENT_ID, CLIENT_SECRET
+    facebook_supported = True
+except:
+    facebook_supported = False
 import os, sys
 import time
 from utils import rate_limited

@@ -3,10 +3,10 @@ from grab import spotify_search
 import os
 import re
 
-def get_playlist(station, day, frm, to):
+def get_playlist(station, frm, to):
     rval = []
-    cfile = os.path.join('cache', '%s_%s_%s_%s.txt' % (station, day, frm.replace(":", "-"), 
-                                                   to.replace(":", "-")))
+    cfile = os.path.join('cache', '%s_%s_%s.txt' % (station, frm.replace(":", "-"),
+                                                    to.replace(":", "-")))
     if os.path.exists(cfile):
         with open(cfile) as inf:
             while True:
@@ -17,12 +17,11 @@ def get_playlist(station, day, frm, to):
                 line = [line[0].split('+')] + line[1:]
                 rval.append(line)
         return rval
-    frm = '%sT%sZ' % (day, frm)
-    to = '%sT%sZ' % (day, to)
-    r = requests.get('http://music.abcradio.net.au/api/v1/plays/search.json?from=%(from)s&station=%(station)s&limit=100&offset=0&order=asc&to=%(to)s' % {'from':frm, 'to':to, 'station': station})
+    r = requests.get('http://music.abcradio.net.au/api/v1/plays/search.json?from=%(from)s&station=%(station)s&limit=1000&offset=0&order=asc&to=%(to)s' % {'from':frm, 'to':to, 'station': station})
+    print r.url
     pls = r.json()
     if 'items' in pls:
-        print('found %s items for %s' % (len(pls['items']), day))
+        print('found %s items for %s' % (len(pls['items']), frm))
         tracks = []
         for item in pls['items']:
             if 'recording' not in item:
@@ -37,9 +36,11 @@ def get_playlist(station, day, frm, to):
             rval.append([artists, title])
     return rval
 
-def write_cache(station, day, frm, to, input):
-    cfile = os.path.join('cache', '%s_%s_%s_%s.txt' % (station, day, frm.replace(":", "-"), 
-                                                   to.replace(":", "-")))
+def write_cache(station, frm, to, input):
+    cfile = os.path.join('cache', '%s_%s_%s.txt' % (station, frm.replace(":", "-"), 
+                                                    to.replace(":", "-")))
+    if not os.path.exists('cache'):
+        os.mkdir('cache')
     with open(cfile, 'w') as outf:
         for line in input:
             print line
@@ -131,9 +132,15 @@ def get_track(sr, artists, track_name):
                     best_result = pick_best_match(best_result, track, artists, track_name)
     return best_result['href'] if best_result is not None else None
 
-
-def generate_playlist(station, day, frm, to):
-    pls = get_playlist(station, day, frm, to)
+def generate_playlist(station, *args):
+    # legacy shit!
+    if len(args) == 3:
+        day, frm, to = args
+        frm = '%sT%sZ' % (day, frm)
+        to = '%sT%sZ' % (day, to)
+    elif len(args) == 2:
+        frm, to = args
+    pls = get_playlist(station, frm, to)
     tracks = []
     for item in pls:
         if len(item) == 3:
@@ -145,5 +152,8 @@ def generate_playlist(station, day, frm, to):
             tracks.append(href)
             if len(item) == 2:
                 item.append(href)
-    write_cache(station, day, frm, to, pls)
-    return tracks
+    write_cache(station, frm, to, pls)
+    if len(args) == 3:
+        return tracks
+    else:
+        return [(item[0], item[1], item[2] if len(item) == 3 else '') for item in pls]
