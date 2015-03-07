@@ -41,10 +41,10 @@ def _google_suggestion(query):
         return fixed
     return None
 
-gqc = {}    
+gqc = {}
 def google_suggestion(query):
     global gqc
-    query = quote_plus(query)
+    query = quote_plus(query.encode('utf-8'))
     if query in gqc:
         return gqc[query]
     r = _google_suggestion(query)
@@ -79,7 +79,7 @@ def _spotify_search(query):
 sqc = {}
 def spotify_search(query):
     global sqc
-    query = quote_plus(query)
+    query = quote_plus(query.encode('utf-8'))
     if query in sqc:
         return sqc[query]
     r = _spotify_search(query)
@@ -179,7 +179,7 @@ if __name__ == '__main__':
                     except KeyError:
                         print 'error processing:', query
                         sr = dict(info=dict(num_results=0))
-                
+
                     #print query
                     written = False
                     if sr['info']['num_results'] > 0:

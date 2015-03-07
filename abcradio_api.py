@@ -1,7 +1,9 @@
 import requests
+import requests.utils
 from grab import spotify_search
 import os
 import re
+import json
 
 def get_playlist(station, frm, to):
     rval = []
@@ -13,13 +15,14 @@ def get_playlist(station, frm, to):
                 line = inf.readline()
                 if line == '':
                     break
+                line = line.decode('utf-8')
                 line = line.strip().split('||')
                 line = [line[0].split('+')] + line[1:]
                 rval.append(line)
         return rval
     r = requests.get('http://music.abcradio.net.au/api/v1/plays/search.json?from=%(from)s&station=%(station)s&limit=1000&offset=0&order=asc&to=%(to)s' % {'from':frm, 'to':to, 'station': station})
-    print r.url
-    pls = r.json()
+    content = r.content.decode('unicode_escape')
+    pls = json.loads(content.encode('utf-8'))
     if 'items' in pls:
         print('found %s items for %s' % (len(pls['items']), frm))
         tracks = []
@@ -37,14 +40,15 @@ def get_playlist(station, frm, to):
     return rval
 
 def write_cache(station, frm, to, input):
-    cfile = os.path.join('cache', '%s_%s_%s.txt' % (station, frm.replace(":", "-"), 
+    cfile = os.path.join('cache', '%s_%s_%s.txt' % (station, frm.replace(":", "-"),
                                                     to.replace(":", "-")))
     if not os.path.exists('cache'):
         os.mkdir('cache')
     with open(cfile, 'w') as outf:
         for line in input:
-            print line
-            outf.write('||'.join(['+'.join(line[0])] + line[1:]) + '\n')
+            line = '||'.join(['+'.join(line[0])] + line[1:]) + '\n'
+            line = line.encode('utf-8')
+            outf.write(line)
 
 pattern = re.compile('[\W_]+')
 
