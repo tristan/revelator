@@ -33,7 +33,7 @@ def get_playlist(station, frm, to):
             title = rec['title'].replace(u"\u2019", u"'") # fix up broken shit
             artists = [a['name'] for a in rec['artists']]
             try:
-                print('%s - %s' % ('+'.join(artists), title))
+                print ('%s - %s' % ('+'.join(artists), title)).encode('utf-8')
             except UnicodeEncodeError:
                 raise
             rval.append([artists, title])
