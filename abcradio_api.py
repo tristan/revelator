@@ -136,6 +136,27 @@ def get_track(sr, artists, track_name):
                     best_result = pick_best_match(best_result, track, artists, track_name)
     return best_result['href'] if best_result is not None else None
 
+MILO_HATES = []
+with open("milohates.txt") as f:
+    for l in f.readlines():
+        cmtidx = l.find('#')
+        if cmtidx > -1:
+            l = l[:cmtidx]
+        l = l.decode('utf-8').strip()
+        if l != '':
+            MILO_HATES.append(l)
+
+CUSTOM_MATCHES = {}
+with open("custommatches.txt") as f:
+    for l in f.readlines():
+        cmtidx = l.find('#')
+        if cmtidx > -1:
+            l = l[:cmtidx]
+        l = l.decode('utf-8').strip()
+        if l != '':
+            artist, track, href = l.strip().rsplit(',', 2)
+            CUSTOM_MATCHES[(artist, track)] = href
+
 def generate_playlist(station, *args):
     # legacy shit!
     if len(args) == 3:
@@ -151,8 +172,17 @@ def generate_playlist(station, *args):
             artists, title, href = item
         else:
             artists, title = item
-            href = get_track(spotify_search('%s %s' % (' '.join(artists), title)), artists, title)
+            # check if we have a custom match for this artist, track
+            custom_key = (','.join(artists), title)
+            if custom_key in CUSTOM_MATCHES:
+                href = CUSTOM_MATCHES[custom_key]
+            else:
+                # if not ask spotify
+                href = get_track(spotify_search('%s %s' % (' '.join(artists), title)), artists, title)
         if href:
+            # ignore shit that milo doesn't like
+            if href in MILO_HATES:
+                continue
             tracks.append(href)
             if len(item) == 2:
                 item.append(href)
