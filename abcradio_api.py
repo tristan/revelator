@@ -10,6 +10,7 @@ def get_playlist(station, frm, to):
     cfile = os.path.join('cache', '%s_%s_%s.txt' % (station, frm.replace(":", "-"),
                                                     to.replace(":", "-")))
     if os.path.exists(cfile):
+        print("Loading data from cache file: %s" % cfile)
         with open(cfile) as inf:
             while True:
                 line = inf.readline()
@@ -20,8 +21,14 @@ def get_playlist(station, frm, to):
                 line = [line[0].split('+')] + line[1:]
                 rval.append(line)
         return rval
-    r = requests.get('http://music.abcradio.net.au/api/v1/plays/search.json?from=%(from)s&station=%(station)s&limit=1000&offset=0&order=asc&to=%(to)s' % {'from':frm, 'to':to, 'station': station})
-    content = r.content.decode('unicode_escape')
+    url = 'http://music.abcradio.net.au/api/v1/plays/search.json?from=%(from)s&station=%(station)s&limit=1000&offset=0&order=asc&to=%(to)s' % {'from':frm, 'to':to, 'station': station}
+    print("Retreiving data from API: %s" % url)
+    r = requests.get(url)
+    # fucking this shit \\" gets decoded to ", which breaks things
+    content = r.content.replace('\\"', '\\\\\\"')
+    # then we have to decode any unicode escapes
+    content = content.decode('unicode_escape')
+    # then we have to make sure everything is utf
     pls = json.loads(content.encode('utf-8'))
     if 'items' in pls:
         print('found %s items for %s' % (len(pls['items']), frm))
@@ -161,6 +168,11 @@ def generate_playlist(station, *args):
     # legacy shit!
     if len(args) == 3:
         day, frm, to = args
+        # fix up hours to be padded with 0
+        if frm[1] == ':':
+            frm = '0%s' % frm
+        if to[1] == ':':
+            to = '0%s' % to
         frm = '%sT%sZ' % (day, frm)
         to = '%sT%sZ' % (day, to)
     elif len(args) == 2:

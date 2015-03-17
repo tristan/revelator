@@ -39,7 +39,12 @@ DAYS = [
     #'2015-01-19', (was beat the drum)
     ('2015-01-26', -1),
     ('2015-02-02', -1),
-    ('2015-02-09', -1)
+    ('2015-02-09', -1),
+    ('2015-02-16', -1),
+    ('2015-02-23', -1),
+    ('2015-03-02', -1),
+    ('2015-03-09', -1),
+    ('2015-03-16', -1) # EMMA SWIFTS FINAL SHOW :(
 ]
 
 false_positives = [
@@ -50,7 +55,7 @@ default_start = 10
 default_end = 12
 
 if __name__ == '__main__':
-    
+
     global_tracks = []
     for day in DAYS:
         if type(day) == tuple:
