@@ -56,7 +56,7 @@ def _spotify_search(query):
     while True:
         print 'querying for', query
         try:
-            r = requests.get('http://ws.spotify.com/search/1/track.json?q=%s' % query, timeout=5)
+            r = requests.get('https://api.spotify.com/v1/search?q=%s&type=track' % query, timeout=5)
         except Timeout, t:
             print 'timed out...'
             time.sleep(1)

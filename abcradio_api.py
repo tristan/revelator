@@ -136,12 +136,11 @@ def pick_best_match(m1, m2, artists, name):
 def get_track(sr, artists, track_name):
     best_result = None
     track_name = track_name.lower()
-    if 'info' in sr:
-        if sr['info']['num_results'] > 0:
-            for track in sr['tracks']:
-                if 'href' in track:
-                    best_result = pick_best_match(best_result, track, artists, track_name)
-    return best_result['href'] if best_result is not None else None
+    if 'tracks' in sr:
+        for track in sr['tracks']['items']:
+            if 'uri' in track:
+                best_result = pick_best_match(best_result, track, artists, track_name)
+    return best_result['uri'] if best_result is not None else None
 
 MILO_HATES = []
 with open("milohates.txt") as f:
