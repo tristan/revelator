@@ -8,7 +8,7 @@ except:
 import os, sys
 import time
 from utils import rate_limited
-from urllib import quote_plus
+from urllib.parse import quote_plus
 from io import open
 from requests.exceptions import Timeout
 
@@ -51,34 +51,52 @@ def google_suggestion(query):
     gqc[query] = r
     return r
 
+spotify_access_token = {}
+CLIENT_ID = os.environ['CLIENT_ID']
+CLIENT_SECRET = os.environ['CLIENT_SECRET']
+
 @rate_limited(9)
 def _spotify_search(query):
     while True:
-        print 'querying for', query
+        print('querying for', query)
         try:
-            r = requests.get('https://api.spotify.com/v1/search?q=%s&type=track' % query, timeout=5)
-        except Timeout, t:
-            print 'timed out...'
+            r = requests.get('https://api.spotify.com/v1/search?q=%s&type=track' % query,
+                             timeout=5,
+                             headers={
+                                 'Content-type': 'application/json',
+                                 'Authorization': 'Bearer {}'.format(spotify_access_token['access_token'])
+                             })
+        except Timeout as t:
+            print('timed out...')
             time.sleep(1)
             continue
         if r.status_code == 403 or r.status_code == 502: # wait 11 seconds before trying again if we get forbidden
-            print 'got forbidden from spotify'
+            print('got forbidden from spotify')
             time.sleep(11)
             continue
         try:
             return r.json()
-        except ValueError, e:
-            print '================'
-            print query
-            print e
-            print r
-            print r.status_code
-            print r.text
+        except ValueError as e:
+            print('================')
+            print(query)
+            print(e)
+            print(r)
+            print(r.status_code)
+            print(r.text)
             raise
 
 sqc = {}
 def spotify_search(query):
     global sqc
+    global spotify_access_token
+    if 'access_token' not in spotify_access_token:
+        r = requests.post('https://accounts.spotify.com/api/token',
+                          auth=requests.auth.HTTPBasicAuth(CLIENT_ID, CLIENT_SECRET),
+                          data={'grant_type': 'client_credentials'})
+        if r.status_code == 200:
+            spotify_access_token.update(r.json())
+        else:
+            r.raise_for_status()
     query = quote_plus(query.encode('utf-8'))
     if query in sqc:
         return sqc[query]
@@ -138,7 +156,7 @@ if __name__ == '__main__':
     for f in os.listdir('.'):
         m = file_re.match(f)
         if m:
-            print 'adding extra playlist from: %s' % f
+            print('adding extra playlist from: %s' % f)
             with open(f, 'r') as inf:
                 lines = [track_ex_re.match(x) for x in inf.readlines()]
                 lines = ''.join(["%s // %s\n" % (x.group('song'), x.group('artist')) for x in lines if x is not None])
@@ -165,7 +183,7 @@ if __name__ == '__main__':
             m = pls_re.search(message)
             if m is None:
                 continue
-            print item.get('created_time')
+            print(item.get('created_time'))
             for line in message.split('\n'):
                 lm = track_re.match(line)
                 if lm is None:
@@ -177,10 +195,10 @@ if __name__ == '__main__':
                     try:
                         sr = spotify_search(query)
                     except KeyError:
-                        print 'error processing:', query
+                        print('error processing:', query)
                         sr = dict(info=dict(num_results=0))
 
-                    #print query
+                    #print(query)
                     written = False
                     if sr['info']['num_results'] > 0:
                         for track in sr['tracks']:
@@ -224,5 +242,5 @@ if __name__ == '__main__':
             try:
                 outf.write("%s | %s\n" % l)
             except UnicodeEncodeError:
-                print l
+                print(l)
                 raise

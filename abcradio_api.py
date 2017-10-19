@@ -25,7 +25,7 @@ def get_playlist(station, frm, to):
     print("Retreiving data from API: %s" % url)
     r = requests.get(url)
     # fucking this shit \\" gets decoded to ", which breaks things
-    content = r.content.replace('\\"', '\\\\\\"')
+    content = r.content.replace(b'\\"', b'\\\\\\"')
     # then we have to decode any unicode escapes
     content = content.decode('unicode_escape')
     # then we have to make sure everything is utf
@@ -40,7 +40,7 @@ def get_playlist(station, frm, to):
             title = rec['title'].replace(u"\u2019", u"'") # fix up broken shit
             artists = [a['name'] for a in rec['artists']]
             try:
-                print ('%s - %s' % ('+'.join(artists), title)).encode('utf-8')
+                print('{} - {}'.format('+'.join(artists), title))
             except UnicodeEncodeError:
                 raise
             rval.append([artists, title])
@@ -54,7 +54,6 @@ def write_cache(station, frm, to, input):
     with open(cfile, 'w') as outf:
         for line in input:
             line = '||'.join(['+'.join(line[0])] + line[1:]) + '\n'
-            line = line.encode('utf-8')
             outf.write(line)
 
 pattern = re.compile('[\W_]+')
@@ -115,21 +114,21 @@ def pick_best_match(m1, m2, artists, name):
             return m2
 
     # most likely they are the same, pick the one with has the territories i need!
-    if 'DE' in m1['album']['availability']['territories']:
+    if 'DE' in m1['available_markets']:
         return m1
-    if 'DE' in m2['album']['availability']['territories']:
+    if 'DE' in m2['available_markets']:
         return m2
     # well, maybe we just pick the one with the longest territories list and hope for the best
-    if len(m1['album']['availability']['territories']) > len(m2['album']['availability']['territories']):
+    if len(m1['available_markets']) > len(m2['available_markets']):
         return m1
-    elif len(m2['album']['availability']['territories']) > len(m1['album']['availability']['territories']):
+    elif len(m2['available_markets']) > len(m1['available_markets']):
         return m2
 
-    print "UNABLE TO FIGURE OUT BEST MATCH"
-    print m1
-    print "--------------"
-    print m2
-    print "=============="
+    print("UNABLE TO FIGURE OUT BEST MATCH")
+    print(m1)
+    print("--------------")
+    print(m2)
+    print("==============")
 
     return m1
 
@@ -148,7 +147,7 @@ with open("milohates.txt") as f:
         cmtidx = l.find('#')
         if cmtidx > -1:
             l = l[:cmtidx]
-        l = l.decode('utf-8').strip()
+        l = l.strip()
         if l != '':
             MILO_HATES.append(l)
 
@@ -158,7 +157,7 @@ with open("custommatches.txt") as f:
         cmtidx = l.find('#')
         if cmtidx > -1:
             l = l[:cmtidx]
-        l = l.decode('utf-8').strip()
+        l = l.strip()
         if l != '':
             artist, track, href = l.strip().rsplit(',', 2)
             CUSTOM_MATCHES[(artist, track)] = href
