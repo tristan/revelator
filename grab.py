@@ -1,16 +1,13 @@
 import requests
 import re
+from urllib.parse import quote_plus
 try:
     from secret_keys import CLIENT_ID, CLIENT_SECRET
     facebook_supported = True
 except:
     facebook_supported = False
-import os, sys
-import time
-from utils import rate_limited
-from urllib.parse import quote_plus
+import os
 from io import open
-from requests.exceptions import Timeout
 
 class SimpleFaceBookClient:
     def __init__(self):
@@ -49,59 +46,6 @@ def google_suggestion(query):
         return gqc[query]
     r = _google_suggestion(query)
     gqc[query] = r
-    return r
-
-spotify_access_token = {}
-CLIENT_ID = os.environ['CLIENT_ID']
-CLIENT_SECRET = os.environ['CLIENT_SECRET']
-
-@rate_limited(9)
-def _spotify_search(query):
-    while True:
-        print('querying for', query)
-        try:
-            r = requests.get('https://api.spotify.com/v1/search?q=%s&type=track' % query,
-                             timeout=5,
-                             headers={
-                                 'Content-type': 'application/json',
-                                 'Authorization': 'Bearer {}'.format(spotify_access_token['access_token'])
-                             })
-        except Timeout as t:
-            print('timed out...')
-            time.sleep(1)
-            continue
-        if r.status_code == 403 or r.status_code == 502: # wait 11 seconds before trying again if we get forbidden
-            print('got forbidden from spotify')
-            time.sleep(11)
-            continue
-        try:
-            return r.json()
-        except ValueError as e:
-            print('================')
-            print(query)
-            print(e)
-            print(r)
-            print(r.status_code)
-            print(r.text)
-            raise
-
-sqc = {}
-def spotify_search(query):
-    global sqc
-    global spotify_access_token
-    if 'access_token' not in spotify_access_token:
-        r = requests.post('https://accounts.spotify.com/api/token',
-                          auth=requests.auth.HTTPBasicAuth(CLIENT_ID, CLIENT_SECRET),
-                          data={'grant_type': 'client_credentials'})
-        if r.status_code == 200:
-            spotify_access_token.update(r.json())
-        else:
-            r.raise_for_status()
-    query = quote_plus(query.encode('utf-8'))
-    if query in sqc:
-        return sqc[query]
-    r = _spotify_search(query)
-    sqc[query] = r
     return r
 
 file_re = re.compile('^(?P<year>[0-9]{4})(?P<month>[0-9]{2})(?P<day>[0-9]{2})\.txt$')

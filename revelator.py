@@ -11,7 +11,7 @@ false_positives = [
 
 if __name__ == '__main__':
     if len(sys.argv) < 2:
-        print("Missing input file")
+        print("Missing input file", file=sys.stderr)
         sys.exit(1)
     with open(sys.argv[1]) as f:
         data = json.load(f)
@@ -22,16 +22,16 @@ if __name__ == '__main__':
     for block in data:
         start_time = block['start_time']
         end_time = block['end_time']
-        m = re.match('^(?P<hour>\d\d):(?P<minute>\d\d)(?::(?P<second>\d\d)(?:\.(?P<milli>\d+))?)?$', start_time)
+        m = re.match(r'^(?P<hour>\d\d):(?P<minute>\d\d)(?::(?P<second>\d\d)(?:\.(?P<milli>\d+))?)?$', start_time)
         if not m:
-            print("invalid start time: %s" % start_time)
+            print(f"invalid start time: {start_time}", file=sys.stderr)
             sys.exit(1)
-        start_time = "%02d:%02d:%02d.%03d" % tuple(int(y) if y is not None else  0 for y in m.groups())
-        m = re.match('^(?P<hour>\d\d):(?P<minute>\d\d)(?::(?P<second>\d\d)(?:\.(?P<milli>\d+))?)?$', end_time)
+        start_time = "%02d:%02d:%02d.%03d" % tuple(int(y) if y is not None else 0 for y in m.groups())
+        m = re.match(r'^(?P<hour>\d\d):(?P<minute>\d\d)(?::(?P<second>\d\d)(?:\.(?P<milli>\d+))?)?$', end_time)
         if not m:
-            print("invalid end time: %s" % end_time)
+            print(f"invalid end time: {end_time}", file=sys.stderr)
             sys.exit(1)
-        end_time = "%02d:%02d:%02d.%03d" % tuple(int(y) if y is not None else  0 for y in m.groups())
+        end_time = "%02d:%02d:%02d.%03d" % tuple(int(y) if y is not None else 0 for y in m.groups())
         station = block['station']
         for day in block['days']:
             tracks = generate_playlist(station, day, start_time, end_time)

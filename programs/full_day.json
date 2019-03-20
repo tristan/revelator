@@ -1,0 +1,10 @@
+[
+  {
+    "station": "doublej",
+    "start_time": "00:00",
+    "end_time": "23:59",
+    "days": [
+      "2019-03-19"
+    ]
+  }
+]
